@@ -5,7 +5,8 @@ BEGIN
     1001                    "JSON"
     1002                    "Value:Representation of a JSON value.  This is the primary container for jsoncpp."
     1003                    "Reader:Interprets character JSON document into a a Value object."
-    1004                    "StyledWriter:Writes JsonValue object to character data."
+    1004                    "StyledWriter:Writes JsonValue object to human readable character data."
+	1005					"FastWriter:Writes JsonValue object in single ling."
 
     2100                    "$construct:$construct(Element) initializes the object with a specified value"
     2101                    "$initialize:$initialize(Element) initializes the object with a specified value"
@@ -35,6 +36,9 @@ BEGIN
     2200                    "$parse:$parse(std::string document, Json::Value root, bool comments) returns a Value object"
 
     2300                    "$write:$write(Json::Value) returns a JSON formatted document for the Value object"
+
+	2400                    "$write:$write(Json::Value) returns a JSON formatted document for the Value object"
+
 
     3100                    "$type:(read only) $type returns the JSON value type constant integer for the current type."
     3101                    "$typeDesc:(read only) $typeDesc returns the JSON value type constant name for the current type."

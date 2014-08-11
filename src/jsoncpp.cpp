@@ -17,6 +17,7 @@
 #include "JsonValue.he"
 #include "JsonReader.he"
 #include "JsonWriter.he"
+#include "JsonFastWriter.he"
 
 // Resource # of library name
 #define LIB_RES_NAME  1000
@@ -41,12 +42,14 @@ const static qshort cJsonObjGroup = 1001;
 // Resource # for objects.  In this project it is also the Unique ID; when an object is called mCompId will equal this.
 const static qshort cJsonValue  = 1002,
                     cJsonReader = 1003,
-					cJsonWriter = 1004;
+					cJsonWriter = 1004,
+					cJsonFastWriter = 1005;
 
 // Set static id's for matching classes (This is used for creating new objects without needing to know the Omnis ID)
 qshort JsonValue::objResourceId = cJsonValue,
        JsonReader::objResourceId = cJsonReader,
-	   JsonWriter::objResourceId = cJsonWriter;
+	   JsonWriter::objResourceId = cJsonWriter,
+	   JsonFastWriter::objResourceId = cJsonFastWriter;
 
 // Omnis objects contained within this component.
 // Columns are:
@@ -58,7 +61,8 @@ ECOobject objectsTable[] =
 {
 	cJsonValue, cJsonValue, 0, cJsonObjGroup,
 	cJsonReader, cJsonReader, 0, cJsonObjGroup,
-	cJsonWriter, cJsonWriter, 0, cJsonObjGroup
+	cJsonWriter, cJsonWriter, 0, cJsonObjGroup,
+	cJsonFastWriter, cJsonFastWriter, 0, cJsonObjGroup
 };
 
 const qshort cObjCount = sizeof(objectsTable) / sizeof(ECOobject); // Number of Omnis objects in this component
@@ -72,6 +76,8 @@ NVObjBase* createObject( qlong propID, qobjinst objinst, tThreadData *pThreadDat
 			return new JsonReader(objinst, pThreadData);
 		case cJsonWriter:
 			return new JsonWriter(objinst, pThreadData);
+		case cJsonFastWriter:
+			return new JsonFastWriter(objinst, pThreadData);
 		default:
 			return 0;
 	}
@@ -91,6 +97,9 @@ void copyObject( qlong propID, objCopyInfo* copyInfo, tThreadData *pThreadData )
         case cJsonWriter:
             copyNVObj<JsonWriter>(propID, copyInfo, pThreadData);
             break;
+		case cJsonFastWriter:
+            copyNVObj<JsonFastWriter>(propID, copyInfo, pThreadData);
+            break;
         default:
             break;
     }
@@ -107,6 +116,9 @@ void removeObject( qlong propID, NVObjBase* nvObj ) {
 			break;
 		case cJsonWriter:
 			delete dynamic_cast<JsonWriter*>(nvObj);
+			break;
+		case cJsonFastWriter:
+			delete dynamic_cast<JsonFastWriter*>(nvObj);
 			break;
 		default:
 			break;
@@ -343,7 +355,11 @@ extern "C" qlong OMNISWNDPROC NVObjWndProc(HWND hwnd, LPARAM Msg, WPARAM wParam,
             // ECM_ISUNICODE - this is sent by OMNIS to find out if your external supports unicode
 		case ECM_ISUNICODE:
 		{
+#ifdef UNICODE
 			return qtrue;  // This external is Studio 5.0+ only
+#else
+			return qfalse;
+#endif
 		}
 	}
 	

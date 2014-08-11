@@ -1,0 +1,57 @@
+/* JSON WRITER (HEADER)
+ * 
+ * This wraps the behaviour of the Json::WRITER class
+ *
+ * NOTE: All headers for external components must have the .he extension instead of the standard .h
+ *       To enable code-highliting in Visual Studio 2008 go to Tools->Options-Text Editor-File Extension 
+ *       and add "he" as a "Microsoft Visual C++" experience.
+ *
+ * October 2, 2010 David McKeone (Created)
+ */
+
+//Omnis includes
+#include <extcomp.he>
+#include "NVObjBase.he"
+#include "OmnisTools.he"
+
+//Boost includes
+#include <Boost/smart_ptr.hpp>
+
+// jsoncpp includes
+#include "json/writer.h"
+
+#ifndef JSON_FASTWRITER_HE
+#define JSON_FASTWRITER_HE
+
+using OmnisTools::tThreadData;
+
+// Class definition for C++ version of your object
+class JsonFastWriter : public NVObjBase
+{
+public:
+	// Static tracking variable
+	static qshort objResourceId;
+	
+	// Constructor / Destructor
+	JsonFastWriter( qobjinst objinst );
+	JsonFastWriter( qobjinst objinst, tThreadData* );
+	virtual ~JsonFastWriter();
+	
+	// Methods Available and Method Call Handling
+	virtual qlong returnMethods( tThreadData* pThreadData );
+	virtual qlong methodCall( tThreadData* pThreadData );
+	
+	// Properties and Property Call Handling
+	virtual qlong returnProperties( tThreadData* pThreadData );
+	virtual qlong getProperty( tThreadData* pThreadData );
+	virtual qlong setProperty( tThreadData* pThreadData );
+	virtual qlong canAssignProperty( tThreadData* pThreadData, qlong propID );
+private:
+	Json::FastWriter jsonWriter;
+	long myProperty;
+	
+	// Write method
+	void methodWrite( tThreadData* pThreadData, qshort pParamCount );
+};
+
+#endif /* JSON_FASTWRITER_HE */

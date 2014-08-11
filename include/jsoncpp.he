@@ -13,9 +13,6 @@
 
 // Omnis includes
 #include <extcomp.he>
-//#include <extfval.he>
-//#include <hwnd.he>
-//#include <gdi.he>
 
 // Tool includes
 #include "OmnisTools.he"
