@@ -6,7 +6,7 @@
  *       To enable code-highliting in Visual Studio 2008 go to Tools->Options-Text Editor-File Extension 
  *       and add "he" as a "Microsoft Visual C++" experience.
  *
- * October 4, 2010 David McKeone (Created)
+ * October 4, 2010 David McKeone (Created)   
  */
 
 #include "OmnisTools.he"
@@ -167,7 +167,7 @@ std::wstring OmnisTools::getWStringFromEXTFldVal(EXTfldval& fVal) {
 	fVal.getChar(maxLength, omnisString, length);
 	
 	wchar_t* cString;
-#if MARKUP_SIZEOFWCHAR == 2
+#if MARKUP_SIZEOFWCHAR == 2 && UNICODE
 	// For 2-Byte UTF16 wchar_t* (Typically Windows)
 	// Convert from UTF8 to UTF16 and set new stringLength
 	
@@ -235,7 +235,7 @@ qchar* OmnisTools::getQCharFromWString(const std::wstring readString, qlong &ret
     // Declare pointer to new data
     qchar* omnisString;
     
-#if MARKUP_SIZEOFWCHAR == 2
+#if MARKUP_SIZEOFWCHAR == 2 && UNICODE
 	// For 2-Byte UTF16 wchar_t* (Typically Windows)
 	// Feed into raw byte data
 	UChar* utf16data = reinterpret_cast<UChar*> (cString);
@@ -275,18 +275,20 @@ std::string OmnisTools::getStringFromEXTFldVal(EXTfldval& fVal) {
 	qchar* omnisString = new qchar[maxLength];
 	fVal.getChar(maxLength, omnisString, length);
 	
+#ifdef UNICODE
 	// Translate qchar* string into UTF8 binary
 	qbyte* utf8data = reinterpret_cast<qbyte*>(omnisString);
 	stringLength = CHRunicode::charToUtf8(omnisString, length, utf8data);
-	
-	// Translate UTF8 binary into char* string
 	char* cString = reinterpret_cast<char*> (utf8data);
-	
-	// Create standard string
-	retString = std::string(cString,stringLength);
+#else
+	stringLength = length;
+	retString = std::string((char*)omnisString,stringLength);
+#endif	
 	
 	// Clean-up
-	delete [] omnisString;
+	if (omnisString != NULL){
+		delete [] omnisString;
+	}
 	
 	return retString;
 }
@@ -299,7 +301,9 @@ void OmnisTools::getEXTFldValFromString(EXTfldval& fVal, const std::string readS
 	fVal.setChar(omnisString, length); // Set value of character field, but exclude the last character since it will be the null terminator from the C String
 	
 	// Clean-up
-	delete [] omnisString;
+	if (omnisString != NULL) {
+		delete [] omnisString;
+	}
 }
 
 // Set an existing EXTfldval object from a std::wstring
@@ -325,10 +329,15 @@ qchar* OmnisTools::getQCharFromString(const std::string readString, qlong &retLe
 	
 	// Allocate new qchar* string
 	qchar* omnisString = new qchar[length];
-	
+
+#ifdef UNICODE
 	// Convert to Omnis Character field
 	retLength = CHRunicode::utf8ToChar(utf8data, length, omnisString);  // Convert characters into Omnis Char Field
-	
+#else
+	retLength = length;
+	strcpy((char*)omnisString, readString.c_str());
+#endif
+
 	return omnisString;
 }
 
@@ -337,7 +346,11 @@ str15 OmnisTools::initStr15(const char* in){
     str15 theString;
     qshort length = strlen(in);
     if (length > 0 && length <= 15) {
+#ifdef UNICODE
         theString.setUtf8((qbyte*) in, strlen(in));
+#else
+		theString = in;
+#endif
     }
     
     return theString;
@@ -348,8 +361,12 @@ str31 OmnisTools::initStr31(const char* in){
     str31 theString;
     qshort length = strlen(in);
     if (length > 0 && length <= 31) {
+#ifdef UNICODE
         theString.setUtf8((qbyte*) in, strlen(in));
-    }
+#else
+		theString = in;
+#endif    
+	}
     
     return theString;
 } 
@@ -359,8 +376,12 @@ str80 OmnisTools::initStr80(const char* in){
     str80 theString;
     qshort length = strlen(in);
     if (length > 0 && length <= 80) {
+#ifdef UNICODE
         theString.setUtf8((qbyte*) in, strlen(in));
-    }
+#else
+		theString = in;
+#endif    
+	}
     
     return theString;
 } 
@@ -370,8 +391,12 @@ str255 OmnisTools::initStr255(const char* in) {
     str255 theString;
     qshort length = strlen(in);
     if (length > 0 && length <= 255) {
+#ifdef UNICODE
         theString.setUtf8((qbyte*) in, strlen(in));
-    }
+#else
+		theString = in;
+#endif    
+	}
     
     return theString;
 } 
