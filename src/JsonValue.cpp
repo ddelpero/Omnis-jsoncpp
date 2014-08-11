@@ -842,7 +842,11 @@ void JsonValue::methodGetMemberNames( tThreadData* pThreadData, qshort pParamCou
 	
 	// Ensure that the Json::Value is an Object (since those are the only one's with member names)
 	if ( !(jsonValue->isObject()) ) {
+#ifdef UNICODE // temp ifdef. This might fail under Studio 4 unicode. 
 		fValReturn.setList(retList, qtrue, qfalse); 
+#else
+		fValReturn.setList(retList, qtrue);
+#endif
 		ECOaddParam(pThreadData->mEci, &fValReturn);
 		return;
 	}
@@ -862,7 +866,11 @@ void JsonValue::methodGetMemberNames( tThreadData* pThreadData, qshort pParamCou
 		getEXTFldValFromString(fValMember, rowMember);
 	}
 	
+#ifdef UNICODE
 	fValReturn.setList(retList, qtrue, qfalse); 
+#else
+	fValReturn.setList(retList, qtrue);
+#endif
 	ECOaddParam(pThreadData->mEci, &fValReturn);
 	return;
 }
