@@ -962,10 +962,10 @@ qshort JsonValue::addColForValue(EXTqlist* list, Json::Value* val, str255& colNa
             colNum = list->addCol(fftCharacter, dpFcharacter, 10000000, &colName);
             break;
         case Json::intValue:
-            colNum = list->addCol(fftInteger, dpDefault, 0, &colName);
+            colNum = list->addCol(fftInteger, 0, 10000000, &colName);
             break;
         case Json::uintValue:
-            colNum = list->addCol(fftInteger, dpDefault, 0, &colName);
+            colNum = list->addCol(fftInteger, 0, 10000000, &colName);
             break;
         case Json::realValue:
             colNum = list->addCol(fftNumber, dpFloat, 0, &colName);
@@ -1070,6 +1070,9 @@ bool JsonValue::writeValueToList( tThreadData* pThreadData, EXTqlist* list, Json
 {    
     EXTqlist* innerList;
     EXTqlist* arrayList;
+	EXTqlist* mergeList = NULL;
+	qbool merge = 0;
+	qlong rowNum;
     str255 colName;
     EXTfldval colVal, colNameVal;
     std::string label;
@@ -1077,6 +1080,10 @@ bool JsonValue::writeValueToList( tThreadData* pThreadData, EXTqlist* list, Json
     // Variables for jsoncpp
     Json::Value innerVal;
     Json::Value::Members memberNames;
+
+	qlong rowCount;
+	Json::Value::ArrayIndex memberCount;
+
     
     // Based on the type of the value write to a list
     if (val->isNull()) {
@@ -1112,23 +1119,61 @@ bool JsonValue::writeValueToList( tThreadData* pThreadData, EXTqlist* list, Json
             colVal.setChar(colName);
             colMap[getStringFromEXTFldVal(colVal)] = col;
         }
-        
+
+		rowCount = innerList->rowCnt();
+		memberCount = memberNames.size();
+
         // Loop all member names and create a column for each (if applicable)
         for (qshort c = 1; c <= (qshort) val->size(); ++c) {
             // Check for existing column name and add if it's missing
             colMapIterator = colMap.find(memberNames[c-1]);
             if(colMapIterator == colMap.end()) {
+				// Before Studio v5, adding a column to an existing list clears the list
+				// if we have rows, make a copy of the list so we can merge the list 
+                if (rowCount)
+				{
+					mergeList = new EXTqlist(listVlen);
+					merge = mergeList->dup(*innerList);
+					rowCount = mergeList->rowCnt();
+				}
+
                 // Add column for member
                 colName = initStr255(memberNames[c-1].c_str());  // jsoncpp index is off of 0
                 innerVal = (*val)[memberNames[c-1]];  // jsoncpp index is off of 0
                 
                 // Add column and add to column map
                 colMap[memberNames[c-1]] = addColForValue(innerList, &innerVal, colName);
+				if (mergeList != NULL)
+				{
+					rowCount = mergeList->rowCnt();
+				}
             }             
         }
+
+		//If we added a column to an existing list, merge the list now
+		if (merge)
+		{
+			for (qlong r = 1; r <= mergeList->rowCnt(); r++)
+			{
+				rowNum = innerList->insertRow();
+				for (qshort c = 1; c <= mergeList->colCnt(); c++)
+				{
+					//get column name from old list and then get its new index from colMap
+					str255 colName;
+					mergeList->getCol(c, colName);
+					EXTfldval oldColVal;
+					mergeList->getColVal(r, c, oldColVal);
+					innerList->putColVal(r, colMap[(LPCTSTR)colName.cString()], oldColVal);
+				}
+			}
+			if (mergeList != NULL)
+			{
+				delete mergeList;
+			}
+		}
         
         // Add a row and write all the values
-        qlong rowNum = innerList->insertRow();
+        rowNum = innerList->insertRow();
         if (rowNum > 0) {    
             for (qshort c = 1; c <= (qshort) val->size(); ++c) {
                 // Get Json::Value and write to column
@@ -1193,6 +1238,9 @@ bool JsonValue::writeValueToList( tThreadData* pThreadData, EXTqlist* list, Json
             list->getColValRef(row, col, colVal, qtrue);
             
             getEXTFldValFromValue(pThreadData, colVal, val);
+			/*EXTfldval tempVal;
+            getEXTFldValFromValue(pThreadData, tempVal, val);
+            list->putColVal(row, col, tempVal);*/
         }
     }
     

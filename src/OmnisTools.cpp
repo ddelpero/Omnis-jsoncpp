@@ -328,7 +328,7 @@ qchar* OmnisTools::getQCharFromString(const std::string readString, qlong &retLe
 	qbyte* utf8data = reinterpret_cast<qbyte*> (cString);
 	
 	// Allocate new qchar* string
-	qchar* omnisString = new qchar[length];
+	qchar* omnisString = new qchar[length+1];
 
 #ifdef UNICODE
 	// Convert to Omnis Character field
